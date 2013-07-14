@@ -9,12 +9,9 @@
 ]]
 
 local lastQ = 0
-local enemies = {}
 local lastAttack = 0
 local qCount = 0
 local rCast = 0
-local enemyMinions
-local tick, delay = 0, 400
 local target
 local nextQ = 0
 
@@ -59,7 +56,7 @@ function Combo()
 		if myHero:CanUseSpell(_W) == READY and GetDistance(target) < 250 then
 			CastSpell(_W)
 		end
-		if qCount > 0 and GetDistance(target) - (GetDistance(target.minBBox, target.maxBBox) / 2) + 50 > myHero.range + GetDistance(myHero.minBBox) then
+		if qCount > 0 and target and not AutoCarry.Orbwalker.target then
 			CastSpell(_Q, target.x, target.z)
 		end
 	end
