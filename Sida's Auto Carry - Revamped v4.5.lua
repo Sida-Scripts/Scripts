@@ -602,6 +602,15 @@ AutoCarry.GetPrediction = function(skill, target)
 	end
 	return pred:GetPrediction(target)
 end
+
+AutoCarry.IsValidHitChance = function(skill, target)
+	if VIP_USER then
+		pred = TargetPredictionVIP(skill.range, skill.speed*1000, skill.delay/1000, skill.width)
+		return pred:GetHitChance(target) > SkillsMenu.hitChance/100 and true or false
+	elseif not VIP_USER then
+		return true
+	end
+end
  
 function CastTargettedSpell(skill, target)
         if GetDistance(target) <= skill.range then
