@@ -1,4 +1,4 @@
---[[ Sida's Auto Carry Plugin - Riven ]]--
+--[[ Sida's Auto Carry Plugin - Riven, by Sida ]]--
 
 --[[
 	Combo: Ult (if enabled) > W > E. Will Q between attacks.
@@ -26,7 +26,7 @@ function PluginOnLoad()
 	AutoCarry.PluginMenu:addParam("ExtendQ", "Stop Q Running Out", SCRIPT_PARAM_ONOFF, true)
 end
 
-function OnTick()
+function PluginOnTick()
 	AutoCarry.SkillsCrosshair.range = myHero.range + GetDistance(myHero.minBBox) + getQRadius()
 	target = AutoCarry.GetAttackTarget()
 	if myHero:CanUseSpell(_Q) ~= READY and GetTickCount() > lastQ + 1000 then qCount = 0 end
@@ -116,7 +116,7 @@ function ExtendQ()
 	end
 end
 
-function OnProcessSpell(unit, spell)
+function PluginOnProcessSpell(unit, spell)
 	if unit.isMe and spell.name == "RivenTriCleave" then
 		lastQ = GetTickCount()
 	elseif unit.isMe and spell.name == "RivenFengShuiEngine" then
