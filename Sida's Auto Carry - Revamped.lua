@@ -100,7 +100,8 @@ function moveToCursor(range)
     if not disableMovement and AutoCarry.CanMove then
 		local moveDist = 480 + (GetLatency()/10)
 		if not range then
-			if isMelee and AutoCarry.Orbwalker.target and AutoCarry.Orbwalker.type == myHero.type and GetDistance(AutoCarry.Orbwalker.target) < 150 then 
+			if isMelee and AutoCarry.Orbwalker.target and AutoCarry.Orbwalker.target.type == myHero.type and GetDistance(AutoCarry.Orbwalker.target) < 200 then 
+				myHero:Attack(AutoCarry.Orbwalker.target)
 				return
 			elseif GetDistance(mousePos) < moveDist and GetDistance(mousePos) > 100 then 
 				moveDist = GetDistance(mousePos) 
