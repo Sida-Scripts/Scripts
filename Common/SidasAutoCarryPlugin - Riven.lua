@@ -49,7 +49,7 @@ function Combo()
 	if ValidTarget(target) then
 		if AutoCarry.PluginMenu.Ult then
 			if AutoCarry.Orbwalker.target and GetTickCount() > rCast + 16000 then 
-				if ((target.health / target.maxHealth)*100) > AutoCarry.PluginMenu.UltAt then
+				if (target.health / target.maxHealth)*100 > AutoCarry.PluginMenu.UltAt then
 					CastSpell(_R) 
 				end
 			end
