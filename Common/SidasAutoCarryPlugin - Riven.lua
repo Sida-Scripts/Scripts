@@ -27,7 +27,7 @@ function PluginOnLoad()
 end
 
 function PluginOnTick()
-	AutoCarry.SkillsCrosshair.range = myHero.range + GetDistance(myHero.minBBox) + getQRadius()
+	AutoCarry.SkillsCrosshair.range = myHero.range + GetDistance(myHero.minBBox) + (getQRadius()*2)
 	target = AutoCarry.GetAttackTarget()
 	if myHero:CanUseSpell(_Q) ~= READY and GetTickCount() > lastQ + 1000 then qCount = 0 end
 	if AutoCarry.PluginMenu.Killsteal then Killsteal() end
@@ -50,7 +50,7 @@ end
 function Combo()
 	if ValidTarget(target) then
 		if AutoCarry.PluginMenu.Ult then
-			if GetTickCount() > rCast + 16000 then CastSpell(_R) end
+			if AutoCarry.Orbwalker.target and GetTickCount() > rCast + 16000 then CastSpell(_R) end
 			if GetTickCount() > rCast + 14000 and myHero:CanUseSpell(_R) == READY then
 				UltRandom()
 			end
@@ -58,6 +58,9 @@ function Combo()
 		CastSpell(_E, target.x, target.z)
 		if myHero:CanUseSpell(_W) == READY and GetDistance(target) < 250 then
 			CastSpell(_W)
+		end
+		if qCount > 0 and GetDistance(target) - (GetDistance(target.minBBox, target.maxBBox) / 2) + 50 > myHero.range + GetDistance(myHero.minBBox) then
+			CastSpell(_Q, target.x, target.z)
 		end
 	end
 end
