@@ -5,9 +5,9 @@
  
 --[[ Configuration ]]--
  
-local AutoCarryKey = 32
+local AutoCarryKey = 219
 local LastHitKey = string.byte("X")
-local MixedModeKey = string.byte("C")
+local MixedModeKey = string.byte("D")
 local LaneClearKey = string.byte("V")
  
 ------------ > Don't touch anything below here < --------------
@@ -610,6 +610,10 @@ AutoCarry.IsValidHitChance = function(skill, target)
 	elseif not VIP_USER then
 		return true
 	end
+end
+
+AutoCarry.GetNextAttackTime = function()
+	return (lastAttack + previousAttackCooldown) - GetLatency()/2
 end
  
 function CastTargettedSpell(skill, target)
