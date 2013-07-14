@@ -4,7 +4,6 @@
 	Combo: Ult (if enabled) > W > E. Will Q between attacks.
 	Harass: W > E. Will Q between attacks.
 	Killsteal: Killsteal with R.
-	Extend Q: Will cast Q if it's about to run out so it's not wasted.
 	Ult Random: If ult is about to run out and hasn't been fired, it'll find the best target and fire at them.
 ]]
 
@@ -21,7 +20,6 @@ function PluginOnLoad()
 	AutoCarry.PluginMenu:addParam("Killsteal", "Killsteal With Ult", SCRIPT_PARAM_ONOFF, true)
 	AutoCarry.PluginMenu:addParam("Ult", "Use Ult In Combo", SCRIPT_PARAM_ONOFF, true)
 	AutoCarry.PluginMenu:addParam("UltAt", "Enemy Hp % To Use Ult", SCRIPT_PARAM_SLICE, 60, 0, 100, 0)
-	AutoCarry.PluginMenu:addParam("ExtendQ", "Stop Q Running Out", SCRIPT_PARAM_ONOFF, true)
 end
 
 function PluginOnTick()
@@ -31,7 +29,6 @@ function PluginOnTick()
 	if AutoCarry.PluginMenu.Killsteal then Killsteal() end
 	if AutoCarry.PluginMenu.Harass and AutoCarry.MainMenu.MixedMode then Harass() end
 	if AutoCarry.PluginMenu.Combo and AutoCarry.MainMenu.AutoCarry then Combo() end
-	if AutoCarry.PluginMenu.ExtendQ then ExtendQ() end
 end
 
 function Harass()
@@ -107,16 +104,6 @@ function getQRadius()
 			return 162.5
 		elseif qCount == 2 then
 			return 200
-		end
-	end
-end
-
-function ExtendQ()
-	if (myHero:CanUseSpell(_Q) == READY and GetTickCount() > lastQ + 3700 and qCount > 0) then
-		if target then
-			CastSpell(_Q, target.x, target.z)
-		else
-			CastSpell(_Q, mousePos.x, mousePos.z)
 		end
 	end
 end
