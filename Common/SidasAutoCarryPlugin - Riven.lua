@@ -20,6 +20,7 @@ function PluginOnLoad()
 	AutoCarry.PluginMenu:addParam("Harass", "Harass With Mixed Mode", SCRIPT_PARAM_ONOFF, true)
 	AutoCarry.PluginMenu:addParam("Killsteal", "Killsteal With Ult", SCRIPT_PARAM_ONOFF, true)
 	AutoCarry.PluginMenu:addParam("Ult", "Use Ult In Combo", SCRIPT_PARAM_ONOFF, true)
+	AutoCarry.PluginMenu:addParam("UltAt", "Enemy Hp % To Use Ult", SCRIPT_PARAM_SLICE, 60, 0, 100, 0)
 	AutoCarry.PluginMenu:addParam("ExtendQ", "Stop Q Running Out", SCRIPT_PARAM_ONOFF, true)
 end
 
@@ -47,7 +48,11 @@ end
 function Combo()
 	if ValidTarget(target) then
 		if AutoCarry.PluginMenu.Ult then
-			if AutoCarry.Orbwalker.target and GetTickCount() > rCast + 16000 then CastSpell(_R) end
+			if AutoCarry.Orbwalker.target and GetTickCount() > rCast + 16000 then 
+				if (AutoCarry.PluginMenu.UltAt and ((target.health / target.maxHealth)*100) > AutoCarry.PluginMenu.UltAt or not AutoCarry.PluginMenu.UltAt) then
+					CastSpell(_R) 
+				end
+			end
 			if GetTickCount() > rCast + 14000 and myHero:CanUseSpell(_R) == READY then
 				UltRandom()
 			end
