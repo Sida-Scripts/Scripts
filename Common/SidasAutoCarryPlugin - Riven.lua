@@ -5,10 +5,13 @@
 	Harass: W > E. Will Q between attacks.
 	Killsteal: Killsteal with R.
 	Ult Random: If ult is about to run out and hasn't been fired, it'll find the best target and fire at them.
+
+	Always redownload auto carry when using a new plugin, chances are chances were made that the plugin requires.
+
+	Save this script in BoL/Scripts/Common with the name "SidasAutoCarryPlugin - Riven.lua"
 ]]
 
 local lastQ = 0
-local lastAttack = 0
 local qCount = 0
 local rCast = 0
 local target
@@ -50,7 +53,7 @@ function Combo()
 					CastSpell(_R) 
 				end
 			end
-			if GetTickCount() > rCast + 14000 and myHero:CanUseSpell(_R) == READY then
+			if GetTickCount() > rCast + 14000 and GetTickCount() < rCast + 20000 and myHero:CanUseSpell(_R) == READY then
 				UltRandom()
 			end
 		end
@@ -126,9 +129,7 @@ function OnAttacked()
 end
 
  function OnAnimation(unit,animation)    
-    if unit.isMe and animation:find("Attack") then 
-		lastAttack = GetTickCount()
-	elseif unit.isMe and animation:find("Spell1a") then 
+	if unit.isMe and animation:find("Spell1a") then 
 		qCount = 1
 	elseif unit.isMe and animation:find("Spell1b") then 
 		qCount = 2
