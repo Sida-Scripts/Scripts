@@ -5,10 +5,10 @@
  
 --[[ Configuration ]]--
  
-local AutoCarryKey = 32
-local LastHitKey = string.byte("X")
-local MixedModeKey = string.byte("C")
-local LaneClearKey = string.byte("V")
+-local AutoCarryKey = 32
+-local LastHitKey = string.byte("X")
+-local MixedModeKey = string.byte("C")
+-local LaneClearKey = string.byte("V")
  
 ------------ > Don't touch anything below here < --------------
  
@@ -1092,6 +1092,10 @@ end
 
 AutoCarry.AllyMinions = function()
 	return allyMinions
+end
+
+AutoCarry.GetJungleMobs = function()
+	return jungleMobs
 end
  
 --[[ Callbacks ]]--
