@@ -5,10 +5,10 @@
  
 --[[ Configuration ]]--
  
-local AutoCarryKey = 32
-local LastHitKey = string.byte("X")
-local MixedModeKey = string.byte("C")
-local LaneClearKey = string.byte("V")
+local AutoCarryKey = 219
+local LastHitKey = string.byte("A")
+local MixedModeKey = string.byte("D")
+local LaneClearKey = string.byte("C")
 
 ------------ > Don't touch anything below here < --------------
  
@@ -1230,6 +1230,10 @@ function OnDeleteObj(obj)
         if CustomOnDeleteObj then CustomOnDeleteObj(obj) end
 		if PluginOnDeleteObj then PluginOnDeleteObj(obj) end
 end
+
+function OnAnimation(unit, animation)    
+	if PluginOnAnimation then PluginOnAnimation(unit, animation) end
+end				
  
 function OnDraw()
         if DisplayMenu.myRange and not disableRangeDraw then
