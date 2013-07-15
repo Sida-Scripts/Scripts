@@ -46,7 +46,7 @@ function Combo()
 	if ValidTarget(target) then
 		if AutoCarry.PluginMenu.Ult then
 			if AutoCarry.Orbwalker.target and GetTickCount() > rCast + 16000 then 
-				if (target.health / target.maxHealth)*100 > AutoCarry.PluginMenu.UltAt then
+				if (target.health / target.maxHealth)*100 < AutoCarry.PluginMenu.UltAt then
 					CastSpell(_R) 
 				end
 			end
@@ -118,8 +118,10 @@ end
 
 function OnAttacked()
 	if target and GetTickCount() > nextQ then 
-		CastSpell(_Q, target.x, target.z) 
-		nextQ = AutoCarry.GetNextAttackTime()
+		if (AutoCarry.PluginMenu.Harass and AutoCarry.MainMenu.MixedMode) or (AutoCarry.PluginMenu.Combo and AutoCarry.MainMenu.AutoCarry) then
+			CastSpell(_Q, target.x, target.z) 
+			nextQ = AutoCarry.GetNextAttackTime()
+		end
 	end
 end
 
