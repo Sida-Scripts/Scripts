@@ -1159,8 +1159,8 @@ function OnTick()
                 if not ValidTarget(killableMinion) then killableMinion = getKillableCreep(1) end
                 if ValidTarget(killableMinion) and timeToShoot() and AutoCarry.CanAttack then
                         attackEnemy(killableMinion)
-                elseif ValidTarget(turretMinion.obj) and timeToShoot() and AutoCarry.CanAttack and turretMinion.timeToHit > getTimeToHit(turretMinion.obj, projSpeed) then
-                        attackEnemy(turretMinion.obj)
+                --elseif ValidTarget(turretMinion.obj) and timeToShoot() and AutoCarry.CanAttack and turretMinion.timeToHit > getTimeToHit(turretMinion.obj, projSpeed) then
+                  --      attackEnemy(turretMinion.obj)
                 elseif heroCanMove() and FarmMenu.moveLastHit then
                         moveToCursor()
                 end
@@ -1233,7 +1233,11 @@ end
 
 function OnAnimation(unit, animation)    
 	if PluginOnAnimation then PluginOnAnimation(unit, animation) end
-end				
+end		
+
+function OnSendPacket(packet)
+	if PluginOnSendPacket then PluginOnSendPacket(packet) end
+end		
  
 function OnDraw()
         if DisplayMenu.myRange and not disableRangeDraw then
