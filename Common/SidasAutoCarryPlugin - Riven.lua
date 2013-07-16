@@ -16,7 +16,7 @@ local qCount = 0
 local rCast = 0
 local target
 local nextQ = 0
-local bAllowQ = false
+local bAllowQ = true
 
 function PluginOnLoad()
 	AutoCarry.PluginMenu:addParam("UseQ", "Use Q at mousepos", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Q"))
@@ -75,7 +75,7 @@ function UseQ()
 	if myHero:CanUseSpell(_Q) == READY then
 		bAllowQ = true
 		CastSpell(_Q, mousePos.x, mousePos.z)
-	else
+	elseif VIP_USER then
 		bAllowQ = false
 	end
 end
