@@ -16,8 +16,10 @@ local qCount = 0
 local rCast = 0
 local target
 local nextQ = 0
+local bAllowQ = false
 
 function PluginOnLoad()
+	AutoCarry.PluginMenu:addParam("UseQ", "Use Q at mousepos", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("Q"))
 	AutoCarry.PluginMenu:addParam("Combo", "Use Combo With Auto Carry", SCRIPT_PARAM_ONOFF, true)
 	AutoCarry.PluginMenu:addParam("Harass", "Harass With Mixed Mode", SCRIPT_PARAM_ONOFF, true)
 	AutoCarry.PluginMenu:addParam("Killsteal", "Killsteal With Ult", SCRIPT_PARAM_ONOFF, true)
@@ -32,6 +34,7 @@ function PluginOnTick()
 	if AutoCarry.PluginMenu.Killsteal then Killsteal() end
 	if AutoCarry.PluginMenu.Harass and AutoCarry.MainMenu.MixedMode then Harass() end
 	if AutoCarry.PluginMenu.Combo and AutoCarry.MainMenu.AutoCarry then Combo() end
+	if AutoCarry.PluginMenu.UseQ then UseQ() end
 end
 
 function Harass()
@@ -62,8 +65,18 @@ function Combo()
 			CastSpell(_W)
 		end
 		if qCount > 0 and target and not AutoCarry.Orbwalker.target then
+			bAllowQ = true
 			CastSpell(_Q, target.x, target.z)
 		end
+	end
+end
+
+function UseQ()
+	if myHero:CanUseSpell(_Q) == READY then
+		bAllowQ = true
+		CastSpell(_Q, mousePos.x, mousePos.z)
+	else
+		bAllowQ = false
 	end
 end
 
@@ -122,18 +135,32 @@ end
 function OnAttacked()
 	if target and GetTickCount() > nextQ then 
 		if (AutoCarry.PluginMenu.Harass and AutoCarry.MainMenu.MixedMode) or (AutoCarry.PluginMenu.Combo and AutoCarry.MainMenu.AutoCarry) then
-			CastSpell(_Q, target.x, target.z) 
+			bAllowQ = true
+			CastSpell(_Q, target.x, target.z)
 			nextQ = AutoCarry.GetNextAttackTime()
 		end
 	end
 end
 
- function OnAnimation(unit,animation)    
+ function PluginOnAnimation(unit,animation)    
 	if unit.isMe and animation:find("Spell1a") then 
 		qCount = 1
 	elseif unit.isMe and animation:find("Spell1b") then 
 		qCount = 2
 	elseif unit.isMe and animation:find("Spell1c") then 
 		qCount = 3
+	end
+end
+
+function PluginOnSendPacket(packet)
+	local packet2 = Packet(packet)
+	if packet2:get('name') == 'S_CAST' then
+		if packet2:get('spellId') == _Q then
+			if not bAllowQ then
+				packet2:block()
+			else
+				bAllowQ = false
+			end
+		end
 	end
 end
