@@ -10,7 +10,7 @@
 
 	Save this script in BoL/Scripts/Common with the name "SidasAutoCarryPlugin - Riven.lua"
 ]]
-
+VIP_USER = false
 local lastQ = 0
 local qCount = 0
 local rCast = 0
