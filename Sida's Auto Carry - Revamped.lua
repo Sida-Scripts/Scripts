@@ -1235,9 +1235,9 @@ function OnAnimation(unit, animation)
 	if PluginOnAnimation then PluginOnAnimation(unit, animation) end
 end		
 
-function OnSendPacket(packet)
-	if PluginOnSendPacket then PluginOnSendPacket(packet) end
-end		
+--function OnSendPacket(packet)
+--	if PluginOnSendPacket then PluginOnSendPacket(packet) end
+--end		
  
 function OnDraw()
         if DisplayMenu.myRange and not disableRangeDraw then
