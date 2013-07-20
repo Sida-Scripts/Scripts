@@ -38,6 +38,7 @@ local Tristana = false
 local hudDisabled = false
 local ChampInfo = {}
 local useVIPCol = false
+local lastAttacked = nil
 local previousWindUp = 0
 local previousAttackCooldown = 0
 _G.AutoCarry = _G
@@ -63,6 +64,7 @@ function attackEnemy(enemy)
 	if CustomAttackEnemy then CustomAttackEnemy(enemy) return end
     if enemy.dead or not enemy.valid or not AutoCarry.CanAttack then return end
 	myHero:Attack(enemy)
+	lastAttacked = enemy
 	AutoCarry.shotFired = true
 end
  
@@ -100,8 +102,8 @@ function moveToCursor(range)
     if not disableMovement and AutoCarry.CanMove then
 		local moveDist = 480 + (GetLatency()/10)
 		if not range then
-			if isMelee and AutoCarry.Orbwalker.target and AutoCarry.Orbwalker.target.type == myHero.type and GetDistance(AutoCarry.Orbwalker.target) < 200 then 
-				myHero:Attack(AutoCarry.Orbwalker.target)
+			if isMelee and AutoCarry.Orbwalker.target and AutoCarry.Orbwalker.target.type == myHero.type and GetDistance(AutoCarry.Orbwalker.target) < 80 then 
+				attackEnemy(AutoCarry.Orbwalker.target)
 				return
 			elseif GetDistance(mousePos) < moveDist and GetDistance(mousePos) > 100 then 
 				moveDist = GetDistance(mousePos) 
@@ -1096,6 +1098,10 @@ end
 
 AutoCarry.GetJungleMobs = function()
 	return jungleMobs
+end
+
+AutoCarry.GetLastAttacked = function()
+	return lastAttacked
 end
  
 --[[ Callbacks ]]--
