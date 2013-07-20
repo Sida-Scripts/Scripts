@@ -1103,6 +1103,10 @@ end
 AutoCarry.GetLastAttacked = function()
 	return lastAttacked
 end
+
+function OnApplyParticle(Unit, Particle)
+	if PluginOnApplyParticle then PluginOnApplyParticle(Unit, Particle) end
+end
  
 --[[ Callbacks ]]--
 function OnLoad()
