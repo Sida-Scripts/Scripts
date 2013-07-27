@@ -5,10 +5,10 @@
  
 --[[ Configuration ]]--
  
-local AutoCarryKey = 32
-local LastHitKey = string.byte("X")
-local MixedModeKey = string.byte("C")
-local LaneClearKey = string.byte("V")
+local AutoCarryKey = 219
+local LastHitKey = string.byte("A")
+local MixedModeKey = string.byte("D")
+local LaneClearKey = string.byte("C")
 
 ------------ > Don't touch anything below here < --------------
  
@@ -129,7 +129,7 @@ end
 --[[ Orbwalking ]]--
  
 function OrbwalkingOnLoad()
-	AutoCarry.Orbwalker = TargetSelector(TARGET_LOW_HP_PRIORITY, getTrueRange(), DAMAGE_PHYSICAL, false)
+	AutoCarry.Orbwalker = TargetSelector(TARGET_LOW_HP_PRIORITY, getTrueRange() - 30, DAMAGE_PHYSICAL, false)
 	AutoCarry.Orbwalker:SetBBoxMode(true)
 	AutoCarry.Orbwalker:SetDamages(0, myHero.totalDamage, 0)
 	AutoCarry.Orbwalker.name = "AutoCarry"
@@ -146,8 +146,8 @@ function OrbwalkingOnTick()
 	if GetTickCount() + GetLatency()/2 > lastAttack + previousWindUp + 20 and GetTickCount() + GetLatency()/2 < lastAttack + previousWindUp + 400 then attackedSuccessfully() end
 	isMelee = myHero.range < 300
 	if getTrueRange() ~= lastRange then
-			AutoCarry.Orbwalker.range = getTrueRange()
-			lastRange = getTrueRange()
+			AutoCarry.Orbwalker.range = getTrueRange() - 30
+			lastRange = getTrueRange() - 30
 	end
 	AutoCarry.Orbwalker:update()
 end
