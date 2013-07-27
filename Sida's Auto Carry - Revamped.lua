@@ -82,7 +82,7 @@ function attackedSuccessfully()
 end
  
 function heroCanMove()
-	return (GetTickCount() + GetLatency()/2 > lastAttack + previousWindUp + 20)
+	return (GetTickCount() + GetLatency()/2 > lastAttack + previousWindUp + 20 + 30)
 end
  
 function setMovement()
@@ -145,9 +145,9 @@ function OrbwalkingOnTick()
 	AutoCarry.Orbwalker.targetSelected = AutoCarry.MainMenu.Focused
 	if GetTickCount() + GetLatency()/2 > lastAttack + previousWindUp + 20 and GetTickCount() + GetLatency()/2 < lastAttack + previousWindUp + 400 then attackedSuccessfully() end
 	isMelee = myHero.range < 300
-	if myHero.range ~= lastRange then
-			AutoCarry.Orbwalker.range = myHero.range
-			lastRange = myHero.range
+	if getTrueRange() ~= lastRange then
+			AutoCarry.Orbwalker.range = getTrueRange()
+			lastRange = getTrueRange()
 	end
 	AutoCarry.Orbwalker:update()
 end
@@ -1154,7 +1154,7 @@ function OnTick()
         end
        
         if AutoCarry.MainMenu.AutoCarry then
-                if AutoCarry.Orbwalker.target ~= nil and EnemyInRange(AutoCarry.Orbwalker.target) then
+                if AutoCarry.Orbwalker.target ~= nil then
                         if timeToShoot() and AutoCarry.CanAttack then
                                 attackEnemy(AutoCarry.Orbwalker.target)
                         elseif heroCanMove() then
@@ -1177,7 +1177,7 @@ function OnTick()
         end
        
         if AutoCarry.MainMenu.MixedMode then
-                if AutoCarry.Orbwalker.target ~= nil and EnemyInRange(AutoCarry.Orbwalker.target) then
+                if AutoCarry.Orbwalker.target ~= nil then 
                         if timeToShoot() and AutoCarry.CanAttack then
                                 attackEnemy(AutoCarry.Orbwalker.target)
                         elseif heroCanMove() then
