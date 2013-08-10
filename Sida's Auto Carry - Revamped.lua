@@ -54,6 +54,7 @@ AutoCarry.PluginMenu = nil
 AutoCarry.EnemyTable = nil
 AutoCarry.shotFired = false
 AutoCarry.OverrideCustomChampionSupport = false
+AutoCarry.CurrentlyShooting = false
  
 --[[ Global Functions ]]--
 function getTrueRange()
@@ -233,6 +234,8 @@ function isSpellAttack(spellName)
 		--Renekton
 		or spellName == "RenektonExecute"
 		or spellName == "RenektonSuperExecute"
+		--Yi
+		or spellName == "MasterYiDoubleStrike"
     )
 end
 function isNotAttack(spellName)
@@ -1142,6 +1145,7 @@ function OnTick()
         setMovement()
         SetMuramana()
 		if PluginOnTick then PluginOnTick() end
+		AutoCarry.CurrentlyShooting = (GetTickCount() + GetLatency()/2 < lastAttack + previousWindUp + 20 + 30)
 		if StreamingMenu.DisableDrawing and not hudDisabled then 
 			for i = 0, 10 do
 				PrintChat("")
