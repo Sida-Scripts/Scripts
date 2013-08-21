@@ -1254,6 +1254,7 @@ end
 --end		
  
 function OnDraw()
+	if not DisplayMenu.disableAllDrawing then
         if DisplayMenu.myRange and not disableRangeDraw then
                 DrawCircle(myHero.x, myHero.y, myHero.z, getTrueRange(), 0x19A712)
         end
@@ -1262,6 +1263,7 @@ function OnDraw()
         LastHitOnDraw()
         if CustomOnDraw then CustomOnDraw() end
 		if PluginOnDraw then PluginOnDraw() end
+	end
 end
 
 function OnWndMsg(msg, key)
@@ -1638,6 +1640,7 @@ end
  
 function displayMenu()
 	DisplayMenu = scriptConfig("Sida's Auto Carry: Display", "sidasacdisplay")
+	DisplayMenu:addParam("disableAllDrawing", "Disable All Drawing", SCRIPT_PARAM_ONOFF, false)
 	DisplayMenu:addParam("myRange", "Attack Range Circle", SCRIPT_PARAM_ONOFF, true)
 	DisplayMenu:addParam("target", "Circle Around Target", SCRIPT_PARAM_ONOFF, true)
 	DisplayMenu:addParam("minion", "Circle Next Minion To Last Hit", SCRIPT_PARAM_ONOFF, true)
