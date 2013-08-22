@@ -4,7 +4,7 @@
 ]]--
  
 --[[ Configuration ]]--
- 
+
 local AutoCarryKey = 32
 local LastHitKey = string.byte("X")
 local MixedModeKey = string.byte("C")
@@ -992,8 +992,8 @@ end
 --[[ Items ]]--
 local items =
 	{
-		{name = "Blade of the Ruined King", menu = "BRK", id=3153, range = 500, reqTarget = true, slot = nil },
-		{name = "Bilgewater Cutlass", menu = "BWC", id=3144, range = 500, reqTarget = true, slot = nil },
+		{name = "Blade of the Ruined King", menu = "BRK", id=3153, range = 450, reqTarget = true, slot = nil },
+		{name = "Bilgewater Cutlass", menu = "BWC", id=3144, range = 450, reqTarget = true, slot = nil },
 		{name = "Deathfire Grasp", menu = "DFG", id=3128, range = 750, reqTarget = true, slot = nil },
 		{name = "Hextech Gunblade", menu = "HGB", id=3146, range = 400, reqTarget = true, slot = nil },
 		{name = "Ravenous Hydra", menu = "RSH", id=3074, range = 350, reqTarget = false, slot = nil},
