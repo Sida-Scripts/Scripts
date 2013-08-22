@@ -221,6 +221,8 @@ function isSpellAttack(spellName)
 		spellName == "frostarrow"
 		--Caitlyn
 		or spellName == "CaitlynHeadshotMissile"
+		--Kennen
+		or spellName == "KennenMegaProc"
 		--Quinn
 		or spellName == "QuinnWEnhanced"
 		--Trundle
