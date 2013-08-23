@@ -1296,6 +1296,7 @@ function getChampTable()
         Kennen       = { projSpeed = 1.35},
         KogMaw       = { projSpeed = 1.8},
         Leblanc      = { projSpeed = 1.7},
+        Lucian      = { projSpeed = 2.0},
         Lulu         = { projSpeed = 2.5},
         Lux          = { projSpeed = 1.55},
         Malzahar     = { projSpeed = 1.5},
