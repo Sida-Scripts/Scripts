@@ -56,7 +56,7 @@ end
 function GetDamage(enemy)
     local baseDamage = GetSpellData(_E).level > 0 and (GetSpellData(_E).level * 15) + 5 or 0
     local stackDamage = enemy.PoisonStacks > 0 and (enemy.PoisonStacks * 5) + 10 + (myHero.ap * (0.2 * enemy.PoisonStacks)) + (myHero.addDamage * (0.25 * enemy.PoisonStacks)) or 0
-    local trueDamage = (BaseDamage+StackDamage)*(100/(100+enemy.armor))
+    local trueDamage = (baseDamage+stackDamage)*(100/(100+enemy.armor))
     return trueDamage
 end
 
