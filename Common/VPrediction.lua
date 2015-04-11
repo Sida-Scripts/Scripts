@@ -1,4 +1,4 @@
-local version = "2.901"
+local version = "2.92"
 local TESTVERSION = false
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
@@ -1245,17 +1245,6 @@ function VPrediction:OnTick()
 					table.remove(self.TargetsWaypoints[NID], i)
 				else
 					i = i + 1
-				end
-			end
-		end
-
-		for i, unit in ipairs(GetEnemyHeroes()) do
-			for j = 1, unit.buffCount do
-				local buff = unit:getBuff(j)
-				if buff.valid and buff.name == "Stun" then
-					if self.TargetsImmobile[unit.networkID] and self.TargetsImmobile[unit.networkID] < self:GetTime() then
-						self.TargetsImmobile[unit.networkID] = self:GetTime() + (buff.endT-buff.startT)
-					end
 				end
 			end
 		end
