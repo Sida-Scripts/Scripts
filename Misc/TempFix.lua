@@ -1,4 +1,4 @@
 _G.GetWebResult = function(a,b)
-  return ""
+  return "0"
 end
-print("Loaded SAC Temp Fix...don't forget to remove later!")
+print("Loaded GetWebResult Temp Fix...don't forget to remove later!")
