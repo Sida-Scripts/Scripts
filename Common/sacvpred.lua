@@ -1,4 +1,4 @@
-local version = "2.96"
+local version = "2.97"
 local TESTVERSION = false
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
@@ -724,17 +724,16 @@ end
 function sacvpred:CollisionProcessSpell(unit, spell)
     if unit and unit.valid and spell.target and unit.type ~= myHero.type and spell.target.type == 'obj_AI_Minion' and unit.team == myHero.team and spell and spell.name and (spell.name:lower():find("attack") or (spell.name == "frostarrow")) and spell.windUpTime and spell.target then
         if GetDistanceSqr(unit) < 4000000 then
-            local time = self:GetTime() + spell.windUpTime + GetDistance(spell.target, unit) / self:GetProjectileSpeed(unit) - GetLatency()/2000
+            local time = (spell.startTime or self:GetTime()) + spell.windUpTime + GetDistance(spell.target, unit) / self:GetProjectileSpeed(unit) - GetLatency()/2000
             local i = 1
             while i <= #self.ActiveAttacks do
-                if (self.ActiveAttacks[i].Attacker and self.ActiveAttacks[i].Attacker.valid and self.ActiveAttacks[i].Attacker.networkID == unit.networkID) or ((self.ActiveAttacks[i].hittime + 3) < self:GetTime()) then
+                if (self.ActiveAttacks[i].Attacker and self.ActiveAttacks[i].Attacker.valid and self.ActiveAttacks[i].Attacker.networkID == unit.networkID) or ((self.ActiveAttacks[i].hittime + 3) < (spell.startTime or self:GetTime())) then
                     table.remove(self.ActiveAttacks, i)
                 else
                     i = i + 1
                 end
             end
-
-            table.insert(self.ActiveAttacks, {Attacker = unit, pos = Vector(unit), Target = spell.target, animationTime = spell.animationTime, damage = self:CalcDamageOfAttack(unit, spell.target, spell, 0), hittime=time, starttime = self:GetTime() - GetLatency()/2000, windUpTime = spell.windUpTime, projectilespeed = self:GetProjectileSpeed(unit)})
+            table.insert(self.ActiveAttacks, {Attacker = unit, pos = Vector(unit), Target = spell.target, animationTime = spell.animationTime, damage = self:CalcDamageOfAttack(unit, spell.target, spell, 0), hittime=time, starttime = (spell.startTime or self:GetTime()) - GetLatency()/2000, windUpTime = spell.windUpTime, projectilespeed = self:GetProjectileSpeed(unit)})
         end
     end
 end
