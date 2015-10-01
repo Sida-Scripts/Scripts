@@ -1,4 +1,4 @@
-local version = "2.971"
+local version = "2.972"
 local TESTVERSION = false
 local AUTO_UPDATE = true
 local UPDATE_HOST = "raw.github.com"
@@ -29,7 +29,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local minionTar = {}
-local canPackets = VIP_USER and GetGameVersion and GetGameVersion():find("5.19")
+local canPackets = VIP_USER and GetGameVersion and GetGameVersion():sub(1,4) == "5.19"
 
 local lshift, rshift, band, bxor, DwordToFloat, missileTarget = bit32.lshift, bit32.rshift, bit32.band, bit32.bxor, DwordToFloat, {}
 if canPackets then
