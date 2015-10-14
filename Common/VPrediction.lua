@@ -1,50 +1,235 @@
-local version = "2.972"
+local version = 2.973
 local TESTVERSION = false
 local AUTO_UPDATE = true
-local UPDATE_HOST = "raw.github.com"
-local UPDATE_PATH = "/SidaBoL/Scripts/master/Common/VPrediction.lua?rand="..math.random(1,10000)
-local UPDATE_FILE_PATH = LIB_PATH.."vPrediction.lua"
-local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
-local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>VPrediction Fixed:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
-if AUTO_UPDATE then
-    local ServerData = GetWebResult(UPDATE_HOST, "/SidaBoL/Scripts/master/Common/VPrediction.version")
-    if ServerData then
-        ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
-        if ServerVersion then
-            if tonumber(version) < ServerVersion then
-                    AutoupdaterMsg("New version available"..ServerVersion)
-                    AutoupdaterMsg("Updating, please don't press F9")
-                    DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () AutoupdaterMsg("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 3)
-            else
-                    AutoupdaterMsg("Loaded version ("..version..")")
-            end
-        end
-    else
-        AutoupdaterMsg("Error downloading version info")
+local function AutoupdaterMsg(msg) print("<font color=\"#6699ff\"><b>VPrediction:</b></font> <font color=\"#FFFFFF\">"..msg..".</font>") end
+
+class "VPredLibUpdate"
+function VPredLibUpdate:__init(LocalVersion,UseHttps, Host, VersionPath, ScriptPath, SavePath, CallbackUpdate, CallbackNoUpdate, CallbackNewVersion,CallbackError)
+    self.LocalVersion = LocalVersion
+    self.Host = Host
+    self.VersionPath = '/BoL/TCPUpdater/GetScript'..(UseHttps and '5' or '6')..'.php?script='..self:Base64Encode(self.Host..VersionPath)..'&rand='..math.random(99999999)
+    self.ScriptPath = '/BoL/TCPUpdater/GetScript'..(UseHttps and '5' or '6')..'.php?script='..self:Base64Encode(self.Host..ScriptPath)..'&rand='..math.random(99999999)
+    self.SavePath = SavePath
+    self.CallbackUpdate = CallbackUpdate
+    self.CallbackNoUpdate = CallbackNoUpdate
+    self.CallbackNewVersion = CallbackNewVersion
+    self.CallbackError = CallbackError
+    --AddDrawCallback(function() self:OnDraw() end)
+    self:CreateSocket(self.VersionPath)
+    self.DownloadStatus = 'Connect to Server for VersionInfo'
+    AddTickCallback(function() self:GetOnlineVersion() end)
+end
+
+function VPredLibUpdate:print(str)
+    print('<font color="#FFFFFF">'..clock()..': '..str)
+end
+
+function VPredLibUpdate:OnDraw()
+    if self.DownloadStatus ~= 'Downloading Script (100%)' and self.DownloadStatus ~= 'Downloading VersionInfo (100%)'then
+        DrawText('Download Status: '..(self.DownloadStatus or 'Unknown'),50,10,50,ARGB(0xFF,0xFF,0xFF,0xFF))
     end
 end
+
+function VPredLibUpdate:CreateSocket(url)
+    if not self.LuaSocket then
+        self.LuaSocket = require("socket")
+    else
+        self.Socket:close()
+        self.Socket = nil
+        self.Size = nil
+        self.RecvStarted = false
+    end
+    self.LuaSocket = require("socket")
+    self.Socket = self.LuaSocket.tcp()
+    self.Socket:settimeout(0, 'b')
+    self.Socket:settimeout(99999999, 't')
+    self.Socket:connect('sx-bol.eu', 80)
+    self.Url = url
+    self.Started = false
+    self.LastPrint = ""
+    self.File = ""
+end
+
+function VPredLibUpdate:Base64Encode(data)
+    local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+    return ((data:gsub('.', function(x)
+        local r,b='',x:byte()
+        for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
+        return r;
+    end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+        if (#x < 6) then return '' end
+        local c=0
+        for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
+        return b:sub(c+1,c+1)
+    end)..({ '', '==', '=' })[#data%3+1])
+end
+
+function VPredLibUpdate:GetOnlineVersion()
+    if self.GotScriptVersion then return end
+
+    self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
+    if self.Status == 'timeout' and not self.Started then
+        self.Started = true
+        self.Socket:send("GET "..self.Url.." HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
+    end
+    if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
+        self.RecvStarted = true
+        self.DownloadStatus = 'Downloading VersionInfo (0%)'
+    end
+
+    self.File = self.File .. (self.Receive or self.Snipped)
+    if self.File:find('</s'..'ize>') then
+        if not self.Size then
+            self.Size = tonumber(self.File:sub(self.File:find('<si'..'ze>')+6,self.File:find('</si'..'ze>')-1))
+        end
+        if self.File:find('<scr'..'ipt>') then
+            local _,ScriptFind = self.File:find('<scr'..'ipt>')
+            local ScriptEnd = self.File:find('</scr'..'ipt>')
+            if ScriptEnd then ScriptEnd = ScriptEnd - 1 end
+            local DownloadedSize = self.File:sub(ScriptFind+1,ScriptEnd or -1):len()
+            self.DownloadStatus = 'Downloading VersionInfo ('..math.round(100/self.Size*DownloadedSize,2)..'%)'
+        end
+    end
+    if self.File:find('</scr'..'ipt>') then
+        self.DownloadStatus = 'Downloading VersionInfo (100%)'
+        local a,b = self.File:find('\r\n\r\n')
+        self.File = self.File:sub(a,-1)
+        self.NewFile = ''
+        for line,content in ipairs(self.File:split('\n')) do
+            if content:len() > 5 then
+                self.NewFile = self.NewFile .. content
+            end
+        end
+        local HeaderEnd, ContentStart = self.File:find('<scr'..'ipt>')
+        local ContentEnd, _ = self.File:find('</sc'..'ript>')
+        if not ContentStart or not ContentEnd then
+            if self.CallbackError and type(self.CallbackError) == 'function' then
+                self.CallbackError()
+            end
+        else
+            self.OnlineVersion = (Base64Decode(self.File:sub(ContentStart + 1,ContentEnd-1)))
+            self.OnlineVersion = tonumber(self.OnlineVersion)
+            if self.OnlineVersion > self.LocalVersion then
+                if self.CallbackNewVersion and type(self.CallbackNewVersion) == 'function' then
+                    self.CallbackNewVersion(self.OnlineVersion,self.LocalVersion)
+                end
+                self:CreateSocket(self.ScriptPath)
+                self.DownloadStatus = 'Connect to Server for ScriptDownload'
+                AddTickCallback(function() self:DownloadUpdate() end)
+            else
+                if self.CallbackNoUpdate and type(self.CallbackNoUpdate) == 'function' then
+                    self.CallbackNoUpdate(self.LocalVersion)
+                end
+            end
+        end
+        self.GotScriptVersion = true
+    end
+end
+
+function VPredLibUpdate:DownloadUpdate()
+    if self.GotVPredLibUpdate then return end
+    self.Receive, self.Status, self.Snipped = self.Socket:receive(1024)
+    if self.Status == 'timeout' and not self.Started then
+        self.Started = true
+        self.Socket:send("GET "..self.Url.." HTTP/1.1\r\nHost: sx-bol.eu\r\n\r\n")
+    end
+    if (self.Receive or (#self.Snipped > 0)) and not self.RecvStarted then
+        self.RecvStarted = true
+        self.DownloadStatus = 'Downloading Script (0%)'
+    end
+
+    self.File = self.File .. (self.Receive or self.Snipped)
+    if self.File:find('</si'..'ze>') then
+        if not self.Size then
+            self.Size = tonumber(self.File:sub(self.File:find('<si'..'ze>')+6,self.File:find('</si'..'ze>')-1))
+        end
+        if self.File:find('<scr'..'ipt>') then
+            local _,ScriptFind = self.File:find('<scr'..'ipt>')
+            local ScriptEnd = self.File:find('</scr'..'ipt>')
+            if ScriptEnd then ScriptEnd = ScriptEnd - 1 end
+            local DownloadedSize = self.File:sub(ScriptFind+1,ScriptEnd or -1):len()
+            self.DownloadStatus = 'Downloading Script ('..math.round(100/self.Size*DownloadedSize,2)..'%)'
+        end
+    end
+    if self.File:find('</scr'..'ipt>') then
+        self.DownloadStatus = 'Downloading Script (100%)'
+        local a,b = self.File:find('\r\n\r\n')
+        self.File = self.File:sub(a,-1)
+        self.NewFile = ''
+        for line,content in ipairs(self.File:split('\n')) do
+            if content:len() > 5 then
+                self.NewFile = self.NewFile .. content
+            end
+        end
+        local HeaderEnd, ContentStart = self.NewFile:find('<sc'..'ript>')
+        local ContentEnd, _ = self.NewFile:find('</scr'..'ipt>')
+        if not ContentStart or not ContentEnd then
+            if self.CallbackError and type(self.CallbackError) == 'function' then
+                self.CallbackError()
+            end
+        else
+            local newf = self.NewFile:sub(ContentStart+1,ContentEnd-1)
+            local newf = newf:gsub('\r','')
+            if newf:len() ~= self.Size then
+                if self.CallbackError and type(self.CallbackError) == 'function' then
+                    self.CallbackError()
+                end
+                return
+            end
+            local newf = Base64Decode(newf)
+            if type(load(newf)) ~= 'function' then
+                if self.CallbackError and type(self.CallbackError) == 'function' then
+                    self.CallbackError()
+                end
+            else
+                local f = io.open(self.SavePath,"w+b")
+                f:write(newf)
+                f:close()
+                if self.CallbackUpdate and type(self.CallbackUpdate) == 'function' then
+                    self.CallbackUpdate(self.OnlineVersion,self.LocalVersion)
+                end
+            end
+        end
+        self.GotVPredLibUpdate = true
+    end
+end
+function VPredUpdate()
+	local ToUpdate = {}
+    ToUpdate.Version = version
+    ToUpdate.UseHttps = true
+    ToUpdate.Host = "raw.githubusercontent.com"
+    ToUpdate.VersionPath = "/SidaBoL/Scripts/master/Common/VPrediction.version"
+    ToUpdate.ScriptPath =  "/SidaBoL/Scripts/master/Common/VPrediction.lua"
+    ToUpdate.SavePath = LIB_PATH.."VPrediction.lua"
+	ToUpdate.CallbackUpdate = function(NewVersion,OldVersion) AutoupdaterMsg("VPrediction succesfully updated! Restart to use new version.") end
+    ToUpdate.CallbackNoUpdate = function(OldVersion) AutoupdaterMsg(" v"..version.." loaded") end
+    ToUpdate.CallbackNewVersion = function(NewVersion) AutoupdaterMsg("New version found. Downloading now.") end
+	ToUpdate.CallbackError = function(NewVersion) AutoupdaterMsg("Error updating your VPrediction download it manually.") end
+    VPredLibUpdate(ToUpdate.Version,ToUpdate.UseHttps, ToUpdate.Host, ToUpdate.VersionPath, ToUpdate.ScriptPath, ToUpdate.SavePath, ToUpdate.CallbackUpdate,ToUpdate.CallbackNoUpdate, ToUpdate.CallbackNewVersion,ToUpdate.CallbackError)
+end
+if AUTO_UPDATE then VPredUpdate() end
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local minionTar = {}
-local canPackets = VIP_USER and GetGameVersion and GetGameVersion():sub(1,4) == "5.19"
+local canPackets = VIP_USER and GetGameVersion and GetGameVersion():sub(1,4) == "5.20"
 
 local lshift, rshift, band, bxor, DwordToFloat, missileTarget = bit32.lshift, bit32.rshift, bit32.band, bit32.bxor, DwordToFloat, {}
 if canPackets then
     AddLoadCallback(function() AggroPacket() end) --Credits to PewPewPew and Redprince
     class 'AggroPacket'
     function AggroPacket:__init()
-        self.Bytes = { [0x00] = 0xBA, [0x01] = 0x0A, [0x02] = 0x2A, [0x03] = 0x1A, [0x04] = 0x3A, [0x05] = 0x88, [0x06] = 0xA8, [0x07] = 0x98, [0x08] = 0xB8, [0x09] = 0x08, [0x0A] = 0x28, [0x0B] = 0x18, [0x0C] = 0x38, [0x0D] = 0xC8, [0x0E] = 0xE8, [0x0F] = 0xD8, [0x10] = 0xF8, [0x11] = 0x48, [0x12] = 0x68, [0x13] = 0x58, [0x14] = 0x78, [0x15] = 0x42, [0x16] = 0x62, [0x17] = 0x52, [0x18] = 0x72, [0x19] = 0xC2, [0x1A] = 0xE2, [0x1B] = 0xD2, [0x1C] = 0xF2, [0x1D] = 0x82, [0x1E] = 0xA2, [0x1F] = 0x92, [0x20] = 0xB2, [0x21] = 0x02, [0x22] = 0x22, [0x23] = 0x12, [0x24] = 0x32, [0x25] = 0x80, [0x26] = 0xA0, [0x27] = 0x90, [0x28] = 0xB0, [0x29] = 0x00, [0x2A] = 0x20, [0x2B] = 0x10, [0x2C] = 0x30, [0x2D] = 0xC0, [0x2E] = 0xE0, [0x2F] = 0xD0, [0x30] = 0xF0, [0x31] = 0x40, [0x32] = 0x60, [0x33] = 0x50, [0x34] = 0x70, [0x35] = 0x43, [0x36] = 0x63, [0x37] = 0x53, [0x38] = 0x73, [0x39] = 0xC3, [0x3A] = 0xE3, [0x3B] = 0xD3, [0x3C] = 0xF3, [0x3D] = 0x83, [0x3E] = 0xA3, [0x3F] = 0x93, [0x40] = 0xB3, [0x41] = 0x03, [0x42] = 0x23, [0x43] = 0x13, [0x44] = 0x33, [0x45] = 0x81, [0x46] = 0xA1, [0x47] = 0x91, [0x48] = 0xB1, [0x49] = 0x01, [0x4A] = 0x21, [0x4B] = 0x11, [0x4C] = 0x31, [0x4D] = 0xC1, [0x4E] = 0xE1, [0x4F] = 0xD1, [0x50] = 0xF1, [0x51] = 0x41, [0x52] = 0x61, [0x53] = 0x51, [0x54] = 0x71, [0x55] = 0x4D, [0x56] = 0x6D, [0x57] = 0x5D, [0x58] = 0x7D, [0x59] = 0xCD, [0x5A] = 0xED, [0x5B] = 0xDD, [0x5C] = 0xFD, [0x5D] = 0x8D, [0x5E] = 0xAD, [0x5F] = 0x9D, [0x60] = 0xBD, [0x61] = 0x0D, [0x62] = 0x2D, [0x63] = 0x1D, [0x64] = 0x3D, [0x65] = 0x4F, [0x66] = 0x6F, [0x67] = 0x5F, [0x68] = 0x7F, [0x69] = 0xCF, [0x6A] = 0xEF, [0x6B] = 0xDF, [0x6C] = 0xFF, [0x6D] = 0x8F, [0x6E] = 0xAF, [0x6F] = 0x9F, [0x70] = 0xBF, [0x71] = 0x0F, [0x72] = 0x2F, [0x73] = 0x1F, [0x74] = 0x3F, [0x75] = 0x4E, [0x76] = 0x6E, [0x77] = 0x5E, [0x78] = 0x7E, [0x79] = 0xCE, [0x7A] = 0xEE, [0x7B] = 0xDE, [0x7C] = 0xFE, [0x7D] = 0x8E, [0x7E] = 0xAE, [0x7F] = 0x9E, [0x80] = 0xBE, [0x81] = 0x0E, [0x82] = 0x2E, [0x83] = 0x1E, [0x84] = 0x3E, [0x85] = 0x8C, [0x86] = 0xAC, [0x87] = 0x9C, [0x88] = 0xBC, [0x89] = 0x0C, [0x8A] = 0x2C, [0x8B] = 0x1C, [0x8C] = 0x3C, [0x8D] = 0xCC, [0x8E] = 0xEC, [0x8F] = 0xDC, [0x90] = 0xFC, [0x91] = 0x4C, [0x92] = 0x6C, [0x93] = 0x5C, [0x94] = 0x7C, [0x95] = 0x46, [0x96] = 0x66, [0x97] = 0x56, [0x98] = 0x76, [0x99] = 0xC6, [0x9A] = 0xE6, [0x9B] = 0xD6, [0x9C] = 0xF6, [0x9D] = 0x86, [0x9E] = 0xA6, [0x9F] = 0x96, [0xA0] = 0xB6, [0xA1] = 0x06, [0xA2] = 0x26, [0xA3] = 0x16, [0xA4] = 0x36, [0xA5] = 0x84, [0xA6] = 0xA4, [0xA7] = 0x94, [0xA8] = 0xB4, [0xA9] = 0x04, [0xAA] = 0x24, [0xAB] = 0x14, [0xAC] = 0x34, [0xAD] = 0xC4, [0xAE] = 0xE4, [0xAF] = 0xD4, [0xB0] = 0xF4, [0xB1] = 0x44, [0xB2] = 0x64, [0xB3] = 0x54, [0xB4] = 0x74, [0xB5] = 0x47, [0xB6] = 0x67, [0xB7] = 0x57, [0xB8] = 0x77, [0xB9] = 0xC7, [0xBA] = 0xE7, [0xBB] = 0xD7, [0xBC] = 0xF7, [0xBD] = 0x87, [0xBE] = 0xA7, [0xBF] = 0x97, [0xC0] = 0xB7, [0xC1] = 0x07, [0xC2] = 0x27, [0xC3] = 0x17, [0xC4] = 0x37, [0xC5] = 0x85, [0xC6] = 0xA5, [0xC7] = 0x95, [0xC8] = 0xB5, [0xC9] = 0x05, [0xCA] = 0x25, [0xCB] = 0x15, [0xCC] = 0x35, [0xCD] = 0xC5, [0xCE] = 0xE5, [0xCF] = 0xD5, [0xD0] = 0xF5, [0xD1] = 0x45, [0xD2] = 0x65, [0xD3] = 0x55, [0xD4] = 0x75, [0xD5] = 0x49, [0xD6] = 0x69, [0xD7] = 0x59, [0xD8] = 0x79, [0xD9] = 0xC9, [0xDA] = 0xE9, [0xDB] = 0xD9, [0xDC] = 0xF9, [0xDD] = 0x89, [0xDE] = 0xA9, [0xDF] = 0x99, [0xE0] = 0xB9, [0xE1] = 0x09, [0xE2] = 0x29, [0xE3] = 0x19, [0xE4] = 0x39, [0xE5] = 0x4B, [0xE6] = 0x6B, [0xE7] = 0x5B, [0xE8] = 0x7B, [0xE9] = 0xCB, [0xEA] = 0xEB, [0xEB] = 0xDB, [0xEC] = 0xFB, [0xED] = 0x8B, [0xEE] = 0xAB, [0xEF] = 0x9B, [0xF0] = 0xBB, [0xF1] = 0x0B, [0xF2] = 0x2B, [0xF3] = 0x1B, [0xF4] = 0x3B, [0xF5] = 0x4A, [0xF6] = 0x6A, [0xF7] = 0x5A, [0xF8] = 0x7A, [0xF9] = 0xCA, [0xFA] = 0xEA, [0xFB] = 0xDA, [0xFC] = 0xFA, [0xFD] = 0x8A, [0xFE] = 0xAA, [0xFF] = 0x9A, }
+        self.Bytes = {[0x00] = 0x2A, [0x01] = 0x6C, [0x02] = 0x94, [0x03] = 0x79, [0x04] = 0x10, [0x05] = 0xD2, [0x06] = 0x35, [0x07] = 0xCE, [0x08] = 0x92, [0x09] = 0x9A, [0x0A] = 0x31, [0x0B] = 0x7A, [0x0C] = 0x91, [0x0D] = 0x90, [0x0E] = 0xF2, [0x0F] = 0x78, [0x10] = 0xCB, [0x11] = 0x4D, [0x12] = 0x6F, [0x13] = 0x7C, [0x14] = 0xE1, [0x15] = 0xAC, [0x16] = 0x1A, [0x17] = 0x81, [0x18] = 0x84, [0x19] = 0xC2, [0x1A] = 0x29, [0x1B] = 0x87, [0x1C] = 0x70, [0x1D] = 0xED, [0x1E] = 0x86, [0x1F] = 0x4A, [0x20] = 0xB7, [0x21] = 0x9B, [0x22] = 0xE9, [0x23] = 0xC8, [0x24] = 0xA0, [0x25] = 0xAD, [0x26] = 0x64, [0x27] = 0xBD, [0x28] = 0x07, [0x29] = 0x4F, [0x2A] = 0xAE, [0x2B] = 0x65, [0x2C] = 0x43, [0x2D] = 0xAB, [0x2E] = 0x6A, [0x2F] = 0xA1, [0x30] = 0xD6, [0x31] = 0x16, [0x32] = 0x00, [0x33] = 0x2E, [0x34] = 0xF6, [0x35] = 0x7E, [0x36] = 0x5C, [0x37] = 0x8C, [0x38] = 0xD3, [0x39] = 0x0A, [0x3A] = 0x5A, [0x3B] = 0xE0, [0x3C] = 0xBB, [0x3D] = 0xA2, [0x3E] = 0xBC, [0x3F] = 0xAF, [0x40] = 0xF5, [0x41] = 0x0D, [0x42] = 0x44, [0x43] = 0x0E, [0x44] = 0x8A, [0x45] = 0x83, [0x46] = 0x97, [0x47] = 0x26, [0x48] = 0xB0, [0x49] = 0xD1, [0x4A] = 0x27, [0x4B] = 0x22, [0x4C] = 0x9C, [0x4D] = 0x34, [0x4E] = 0xC9, [0x4F] = 0x48, [0x50] = 0x06, [0x51] = 0xE3, [0x52] = 0x7B, [0x53] = 0x5D, [0x54] = 0xA8, [0x55] = 0x1E, [0x56] = 0x57, [0x57] = 0x25, [0x58] = 0x41, [0x59] = 0xD9, [0x5A] = 0x8F, [0x5B] = 0xF3, [0x5C] = 0x67, [0x5D] = 0x7F, [0x5E] = 0xEC, [0x5F] = 0x54, [0x60] = 0xAA, [0x61] = 0x99, [0x62] = 0xE7, [0x63] = 0xF0, [0x64] = 0x4E, [0x65] = 0xC6, [0x66] = 0x73, [0x67] = 0x32, [0x68] = 0x56, [0x69] = 0xE5, [0x6A] = 0xB3, [0x6B] = 0xC7, [0x6C] = 0xE2, [0x6D] = 0x74, [0x6E] = 0x36, [0x6F] = 0xB4, [0x70] = 0xEA, [0x71] = 0x6D, [0x72] = 0x62, [0x73] = 0x1B, [0x74] = 0xA6, [0x75] = 0x11, [0x76] = 0xEB, [0x77] = 0xF1, [0x78] = 0x01, [0x79] = 0x38, [0x7A] = 0x15, [0x7B] = 0x39, [0x7C] = 0x30, [0x7D] = 0xD8, [0x7E] = 0xCF, [0x7F] = 0xB9, [0x80] = 0x5E, [0x81] = 0xDD, [0x82] = 0x68, [0x83] = 0xC3, [0x84] = 0xB6, [0x85] = 0x0B, [0x86] = 0x9F, [0x87] = 0xF4, [0x88] = 0xD7, [0x89] = 0xB5, [0x8A] = 0x3E, [0x8B] = 0x82, [0x8C] = 0x75, [0x8D] = 0x53, [0x8E] = 0xFF, [0x8F] = 0xFD, [0x90] = 0xDA, [0x91] = 0x49, [0x92] = 0xA5, [0x93] = 0xF9, [0x94] = 0xA3, [0x95] = 0xBF, [0x96] = 0x80, [0x97] = 0x50, [0x98] = 0x55, [0x99] = 0x8B, [0x9A] = 0xB8, [0x9B] = 0x3F, [0x9C] = 0xA7, [0x9D] = 0xE4, [0x9E] = 0x72, [0x9F] = 0xDF, [0xA0] = 0xE6, [0xA1] = 0xEF, [0xA2] = 0x4B, [0xA3] = 0x60, [0xA4] = 0x8E, [0xA5] = 0x51, [0xA6] = 0x58, [0xA7] = 0x0C, [0xA8] = 0x98, [0xA9] = 0xF7, [0xAA] = 0x59, [0xAB] = 0xFC, [0xAC] = 0xCA, [0xAD] = 0xCC, [0xAE] = 0x52, [0xAF] = 0x2F, [0xB0] = 0x0F, [0xB1] = 0xC5, [0xB2] = 0x12, [0xB3] = 0xDE, [0xB4] = 0xBA, [0xB5] = 0x04, [0xB6] = 0xA9, [0xB7] = 0xFE, [0xB8] = 0x2B, [0xB9] = 0x61, [0xBA] = 0x24, [0xBB] = 0xB1, [0xBC] = 0xEE, [0xBD] = 0x5B, [0xBE] = 0xBE, [0xBF] = 0x88, [0xC0] = 0x17, [0xC1] = 0x42, [0xC2] = 0x71, [0xC3] = 0xB2, [0xC4] = 0x20, [0xC5] = 0x9D, [0xC6] = 0x69, [0xC7] = 0x7D, [0xC8] = 0x5F, [0xC9] = 0xF8, [0xCA] = 0x1F, [0xCB] = 0xC4, [0xCC] = 0x96, [0xCD] = 0x4C, [0xCE] = 0x8D, [0xCF] = 0x09, [0xD0] = 0xE8, [0xD1] = 0x08, [0xD2] = 0x1D, [0xD3] = 0x66, [0xD4] = 0x23, [0xD5] = 0x03, [0xD6] = 0x37, [0xD7] = 0x93, [0xD8] = 0x2C, [0xD9] = 0x1C, [0xDA] = 0xDB, [0xDB] = 0x6E, [0xDC] = 0xFB, [0xDD] = 0xFA, [0xDE] = 0xD4, [0xDF] = 0x18, [0xE0] = 0x3A, [0xE1] = 0x45, [0xE2] = 0x05, [0xE3] = 0x19, [0xE4] = 0x76, [0xE5] = 0x3C, [0xE6] = 0x21, [0xE7] = 0x02, [0xE8] = 0xA4, [0xE9] = 0x2D, [0xEA] = 0x85, [0xEB] = 0x47, [0xEC] = 0x13, [0xED] = 0x28, [0xEE] = 0xD5, [0xEF] = 0x89, [0xF0] = 0x3D, [0xF1] = 0xD0, [0xF2] = 0xDC, [0xF3] = 0x3B, [0xF4] = 0x33, [0xF5] = 0x63, [0xF6] = 0x46, [0xF7] = 0x77, [0xF8] = 0x6B, [0xF9] = 0xCD, [0xFA] = 0x40, [0xFB] = 0xC1, [0xFC] = 0x9E, [0xFD] = 0xC0, [0xFE] = 0x14, [0xFF] = 0x95, }
         AddRecvPacketCallback2(function(p)
-            if p.header == 0x00C6 then
-                p.pos = 18
+            if p.header == 0x52 then
+                p.pos = 10
                 local target = objManager:GetObjectByNetworkId(self:Float(p, self.Bytes))
                 p.pos = 2
                 local source = objManager:GetObjectByNetworkId(p:DecodeF())
                 if target ~= nil and source ~= nil and target.valid and source.valid and source.type ~= myHero.type and target.type == 'obj_AI_Minion' and source.team == myHero.team then
-                    missileTarget[source.networkID] = target
+					missileTarget[source.networkID] = target
                 end
             end
         end)
