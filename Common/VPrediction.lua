@@ -1,4 +1,4 @@
-local version = 2.975
+local version = 2.976
 local TESTVERSION = false
 local AUTO_UPDATE = true
 
@@ -261,8 +261,8 @@ if canPackets then
         [0xF1] = 0x3B,[0xF3] = 0xBA,[0xF5] = 0x7A,[0xFC] = 0xCD,
         }
         AddRecvPacketCallback2(function(p)
-            if p.header == 153 then
-                p.pos = 15
+            if p.header == 0x00BC then
+                p.pos = 23
                 local target = objManager:GetObjectByNetworkId(self:Float(p, self.Bytes))
                 p.pos = 2
                 local source = objManager:GetObjectByNetworkId(p:DecodeF())
