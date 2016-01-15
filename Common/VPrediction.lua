@@ -1,4 +1,4 @@
-local version = 2.977
+local version = 2.978
 local TESTVERSION = false
 local AUTO_UPDATE = true
 
@@ -110,7 +110,7 @@ function VPredLibUpdate:GetOnlineVersion()
         else
             self.OnlineVersion = (Base64Decode(self.File:sub(ContentStart + 1,ContentEnd-1)))
             self.OnlineVersion = tonumber(self.OnlineVersion)
-            if self.OnlineVersion > self.LocalVersion then
+            if (self.OnlineVersion or 0) > self.LocalVersion then
                 if self.CallbackNewVersion and type(self.CallbackNewVersion) == 'function' then
                     self.CallbackNewVersion(self.OnlineVersion,self.LocalVersion)
                 end
