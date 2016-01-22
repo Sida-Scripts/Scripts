@@ -18,7 +18,7 @@
     Key Up Mode (default):
         1. Hold the hotkey (default 'T') to enter Jump Mode
         2. Release the hotkey to jump
-	    3. Left click to cancel while in Jump Mode
+        3. Left click to cancel while in Jump Mode
 
     Key Down Mode:
         1. Press the hotkey (default 'T') to instantly jump
