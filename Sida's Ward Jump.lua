@@ -20,7 +20,7 @@
         2. Release the hotkey to jump
 	    3. Left click to cancel while in Jump Mode
 
-    Key Up Mode:
+    Key Down Mode:
         1. Press the hotkey (default 'T') to instantly jump
         2. If no viable target is available based on your settings, script will use a ward
         3. If no wards are available, script will enter Jump Mode and instantly jump to the first available target unless you release the key or cancel with left click
