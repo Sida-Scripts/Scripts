@@ -1,4 +1,4 @@
-local version = 2.978
+local version = 2.979
 local TESTVERSION = false
 local AUTO_UPDATE = true
 
@@ -230,7 +230,7 @@ if canPackets then
                 local target = objManager:GetObjectByNetworkId(self:Float(p, self.Bytes))
                 p.pos = 2
                 local source = objManager:GetObjectByNetworkId(p:DecodeF())
-                if target ~= nil and source ~= nil and target.valid and source.valid and source.type ~= myHero.type and target.type == 'obj_AI_Minion' and source.team == myHero.team then
+                if target ~= nil and source ~= nil and target.valid and source.valid and source.type ~= myHero.type and target.type == 'AIMinion' and source.team == myHero.team then
                     missileTarget[source.networkID] = target
                 end
             end
@@ -934,7 +934,7 @@ function VPrediction:GetClosestUnit(obj)
     for i = 1, objManager.maxObjects do
         local object = objManager:GetObject(i)
 
-        if object and object.valid and obj ~= object and (object.type == myHero.type or object.type == "obj_AI_Minion") and object.team ~= myHero.team and  GetDistanceSqr(object.pos, myHero.pos) < 2000*2000  then
+        if object and object.valid and obj ~= object and (object.type == myHero.type or object.type == "AIMinion") and object.team ~= myHero.team and  GetDistanceSqr(object.pos, myHero.pos) < 2000*2000  then
             if GetDistanceSqr(obj.pos, object.pos) < 250*250 then
                 if object.charName and object.charName ~= "SRU_BaronSpawn" then
                     if closest == nil then
@@ -982,7 +982,7 @@ function VPrediction:Animation(unit, action)
     end
 end
 function VPrediction:CollisionProcessSpell(unit, spell)
-    if unit and unit.valid and spell.target and unit.type ~= myHero.type and spell.target.type == 'obj_AI_Minion' and unit.team == myHero.team and spell and spell.name and (spell.name:lower():find("attack") or (spell.name == "frostarrow")) and spell.windUpTime and spell.target then
+    if unit and unit.valid and spell.target and unit.type ~= myHero.type and spell.target.type == 'AIMinion' and unit.team == myHero.team and spell and spell.name and (spell.name:lower():find("attack") or (spell.name == "frostarrow")) and spell.windUpTime and spell.target then
         if GetDistanceSqr(unit) < 4000000 then
             if self.projectilespeeds[unit.charName] then
                 local time = self:GetTime() + GetDistance(spell.target, unit) / self:GetProjectileSpeed(unit) - GetLatency()/2000
@@ -1496,14 +1496,14 @@ function VPrediction:CalcDamageOfAttack(source, target, spell, additionalDamage)
     local damageMultiplier = spell.name:find("CritAttack") and 2 or 1
 
     -- minions give wrong values for armorPen and armorPenPercent
-    if source.type == "obj_AI_Minion" then
+    if source.type == "AIMinion" then
         armorPenPercent = 1
-    elseif source.type == "obj_AI_Turret" then
+    elseif source.type == "AITurret" then
         armorPenPercent = 0.7
     end
 
     -- turrets ignore armor penetration and critical attacks
-    if target.type == "obj_AI_Turret" then
+    if target.type == "AITurret" then
         armorPenPercent = 1
         armorPen = 0
         damageMultiplier = 1
@@ -1520,37 +1520,37 @@ function VPrediction:CalcDamageOfAttack(source, target, spell, additionalDamage)
     end
 
     -- use ability power or ad based damage on turrets
-    if source.type == myHero.type and target.type == "obj_AI_Turret" then
+    if source.type == myHero.type and target.type == "AITurret" then
         totalDamage = math.max(source.totalDamage, source.damage + 0.4 * source.ap)
     end
 
     -- minions deal less damage to enemy heros
-    if source.type == "obj_AI_Minion" and target.type == myHero.type and source.team ~= TEAM_NEUTRAL then
+    if source.type == "AIMinion" and target.type == myHero.type and source.team ~= TEAM_NEUTRAL then
         damageMultiplier = 0.60 * damageMultiplier
     end
 
     -- heros deal less damage to turrets
-    if source.type == myHero.type and target.type == "obj_AI_Turret" then
+    if source.type == myHero.type and target.type == "AITurret" then
         damageMultiplier = 0.95 * damageMultiplier
     end
 
     -- minions deal less damage to turrets
-    if source.type == "obj_AI_Minion" and target.type == "obj_AI_Turret" then
+    if source.type == "AIMinion" and target.type == "AITurret" then
         damageMultiplier = 0.475 * damageMultiplier
     end
 
     -- siege minions and superminions take less damage from turrets
-    if source.type == "obj_AI_Turret" and (target.charName == "Red_Minion_MechCannon" or target.charName == "Blue_Minion_MechCannon") then
+    if source.type == "AITurret" and (target.charName == "Red_Minion_MechCannon" or target.charName == "Blue_Minion_MechCannon") then
         damageMultiplier = 0.8 * damageMultiplier
     end
 
     -- caster minions and basic minions take more damage from turrets
-    if source.type == "obj_AI_Turret" and (target.charName == "Red_Minion_Wizard" or target.charName == "Blue_Minion_Wizard" or target.charName == "Red_Minion_Basic" or target.charName == "Blue_Minion_Basic") then
+    if source.type == "AITurret" and (target.charName == "Red_Minion_Wizard" or target.charName == "Blue_Minion_Wizard" or target.charName == "Red_Minion_Basic" or target.charName == "Blue_Minion_Basic") then
         damageMultiplier = (1 / 0.875) * damageMultiplier
     end
 
     -- turrets deal more damage to all units by default
-    if source.type == "obj_AI_Turret" then
+    if source.type == "AITurret" then
         damageMultiplier = 1.05 * damageMultiplier
     end
 
